@@ -3,6 +3,8 @@ training function for amazonet module
 '''
 import numpy as np
 from datetime import datetime
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+
 from amazonet.models import alecnet
 from amazonet.utils.data import load_tags, load_tiff
 from amazonet.utils.metrics import FScore2
@@ -40,15 +42,18 @@ def start_training():
         # Randomly choose an architecture.
         choice = np.random.choice(len(models)-1)
         model = models[choice].create_model()
-        print("loading model")
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=[FScore2])
+
+        name = str(datetime.now())+'.h5'
+        savebest = ModelCheckpoint(name, monitor='val_loss', verbose=0, save_best_only=True, mode='min', save_weights_only=False)
+        stopearly = EarlyStopping(monitor='val_loss', patience=10, mode='min')
 
         model.fit_generator(batch_gen(),
                             steps_per_epoch=val_idx//batch_size,
                             epochs=epochs,
-                            validation_data=(val_x, val_y))
-        time = str(datetime.now())
-        model.save_weights(time+'.h5')
+                            validation_data=(val_x, val_y),
+                            callbacks=[savebest, stopearly])
+
 
 if __name__ == "__main__":
     start_training()
