@@ -13,7 +13,7 @@ csv_path = None
 tif_dir_path = None
 
 epochs = 100
-batch_size = 64
+batch_size = 32
 
 tags = load_tags(csv_path)
 
@@ -26,8 +26,7 @@ for j in range(val_y.shape[0]):
 
 def batch_gen():
     while True:
-        for i in range(val_idx//batch_size):
-            i *= batch_size
+        for i in range(0, val_idx, batch_size):
             batch_x = np.ndarray(shape=(batch_size, 256, 256, 4))
             for j in range(batch_size):
                 batch_x[j] = load_tiff(i+j, tif_dir_path)
