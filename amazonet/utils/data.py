@@ -14,8 +14,8 @@ from skimage import io
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
-DATA_PATH = ['D:\\data\\kaggle_satellite\\train.csv',
-             'D:\\data\\kaggle_satellite\\train-tif']
+DATA_PATH = ['C:\\data\\kaggle_satellite\\train.csv',
+             'C:\\data\\kaggle_satellite\\train-tif']
 
 TAG_DICT = {
     'clear' : 0,
@@ -91,9 +91,9 @@ def load_tiff(idx, tif_dir_path=None):
 
     # Get tiff
     tif_path = os.path.join(tif_dir_path, 'train_'+str(idx)+'.tif')
-    tiff = np.float64(io.imread(tif_path))
+    tiff = np.float32(io.imread(tif_path))
     tiff *= 0.00001525878 #(1/2**16)
-    return np.float32(tiff)
+    return tiff
 
 
 if __name__ == "__main__":
