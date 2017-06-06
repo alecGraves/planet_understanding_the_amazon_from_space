@@ -4,12 +4,13 @@ training function for amazonet module
 import numpy as np
 from datetime import datetime
 from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.optimizers import Adam
 
-from amazonet.models import alecnet
+from amazonet.models import incepnet, darknet19
 from amazonet.utils.data import load_tags, load_tiff
 from amazonet.utils.metrics import FScore2
 
-MODELS = [alecnet, alecnet]
+MODELS = [incepnet, darknet19]
 
 csv_path = None
 tif_dir_path = None
@@ -19,9 +20,9 @@ batch_size = 32
 
 tags = load_tags(csv_path)
 
-print('Loading val data.')
 val_idx = tags.shape[0]//100*95
 val_y = tags[val_idx:]
+print('Loading {0} val images.'.format(val_y.shape[0]))
 val_x = np.ndarray(shape=(val_y.shape[0], 256, 256, 4))
 for j in range(val_y.shape[0]):
     val_x[j] = load_tiff(val_idx+j, tif_dir_path)
@@ -40,12 +41,16 @@ def batch_gen():
 def start_training():
     while True:
         # Randomly choose an architecture.
-        print("Loading model.")
         choice = np.random.choice(len(MODELS)-1)
-        model = MODELS[choice].create_model()
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=[FScore2])
+        arch = MODELS[choice]
+        print("Loading model {0}.".format(arch.name))
+        model = arch.create_model()
+        model.compile(loss='kullback_leibler_divergence', optimizer='adam', metrics=[FScore2])
 
-        name = "Date" + str(datetime.now()).replace(' ', "_Time").replace(":", "-").replace(".", '-') + '.h5'
+        name = (arch.name
+        + "_Date"
+        + str(datetime.now()).replace(' ', "_Time").replace(":", "-").replace(".", '-') 
+        + '.h5')
         model.save_weights(name)
         savebest = ModelCheckpoint(name, monitor='val_loss', verbose=0, save_best_only=True, mode='min', save_weights_only=False)
         stopearly = EarlyStopping(monitor='val_loss', patience=10, mode='min')

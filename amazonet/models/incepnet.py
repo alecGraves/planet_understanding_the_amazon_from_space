@@ -5,10 +5,12 @@ import keras.backend as K
 from keras.models import Model
 from keras.layers import (Input, Conv2D, BatchNormalization, 
                           Activation, Average, MaxPooling2D,
-                          Concatenate, AveragePooling2D,
+                          Concatenate, GlobalAveragePooling2D,
                           Reshape, Dropout, Flatten, Dense,
-                          GlobalMaxPooling2D)
+                          AveragePooling2D)
 from keras.layers.advanced_activations import LeakyReLU
+
+name = 'incepnet'
 
 def create_model():
     "Generate a single inception_net model"
@@ -46,10 +48,9 @@ def inception_net(_input):
     x = my_inception_module(x, 5)
     x = AveragePooling2D((5, 5), strides=(1, 1))(x)
     x = Dropout(0.4)(x)
-    spatial = get_spatial_dims(x)
-    pred3 = Conv2D(17, kernel_size=spatial)(x)
+    pred3 = Conv2D(17, kernel_size=(1, 1))(x)
+    pred3 = GlobalAveragePooling2D()(pred3)
     out = Average()([pred1, pred2, pred3])
-    out = Flatten()(out)
     out = Activation('softmax')(out)
     return out
 
@@ -91,19 +92,15 @@ def my_inception_module(x, scale=1, do_predict=False):
         predict = Conv2D(int(8*scale), (1, 1))(predict)
         predict = BatchNormalization()(predict)
         predict = LeakyReLU()(predict)
+        predict = Conv2D(int(100*scale), (1, 1))(predict)
+        predict = BatchNormalization()(predict)
+        predict = LeakyReLU()(predict)
         predict = Dropout(0.25)(predict)
-        spatial = get_spatial_dims(predict)
-        predict = Conv2D(17, kernel_size=spatial)(predict)
+        predict = Conv2D(17, kernel_size=(1, 1))(predict)
+        predict = GlobalAveragePooling2D()(predict)
         return out, predict
 
     return out
-
-def get_spatial_dims(layer):
-    if K.image_data_format() == 'channels_first':
-        channel_shape = (int(layer.shape[2]), int(layer.shape[3]))
-    else:
-        channel_shape = (int(layer.shape[1]), int(layer.shape[2]))
-    return channel_shape
 
 def test_model():
     "Test to ensure model compiles successfully"
