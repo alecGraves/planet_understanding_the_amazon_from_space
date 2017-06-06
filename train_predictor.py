@@ -9,7 +9,7 @@ from amazonet.models import alecnet
 from amazonet.utils.data import load_tags, load_tiff
 from amazonet.utils.metrics import FScore2
 
-models = [alecnet, alecnet]
+MODELS = [alecnet, alecnet]
 
 csv_path = None
 tif_dir_path = None
@@ -19,7 +19,7 @@ batch_size = 32
 
 tags = load_tags(csv_path)
 
-print('loading val data')
+print('Loading val data.')
 val_idx = tags.shape[0]//100*95
 val_y = tags[val_idx:]
 val_x = np.ndarray(shape=(val_y.shape[0], 256, 256, 4))
@@ -40,11 +40,13 @@ def batch_gen():
 def start_training():
     while True:
         # Randomly choose an architecture.
-        choice = np.random.choice(len(models)-1)
-        model = models[choice].create_model()
+        print("Loading model.")
+        choice = np.random.choice(len(MODELS)-1)
+        model = MODELS[choice].create_model()
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=[FScore2])
 
-        name = str(datetime.now())+'.h5'
+        name = "Date" + str(datetime.now()).replace(' ', "_Time").replace(":", "-").replace(".", '-') + '.h5'
+        model.save_weights(name)
         savebest = ModelCheckpoint(name, monitor='val_loss', verbose=0, save_best_only=True, mode='min', save_weights_only=False)
         stopearly = EarlyStopping(monitor='val_loss', patience=10, mode='min')
 

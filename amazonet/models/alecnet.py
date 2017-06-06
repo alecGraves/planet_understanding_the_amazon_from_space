@@ -22,7 +22,7 @@ def inception_net(_input):
     '''
     My version of the 'inception net',
     '''
-    x = Conv2D(64, (3, 3),strides=(2, 2))(_input)
+    x = Conv2D(64, (7, 7),strides=(2, 2))(_input)
     x = BatchNormalization()(x)
     x = LeakyReLU()(x)
     x = MaxPooling2D(pool_size=(3,3), strides=2)(x)
@@ -35,11 +35,11 @@ def inception_net(_input):
     x = my_inception_module(x, 2)
     x = MaxPooling2D(pool_size=(3,3), strides=2)(x)
     x = my_inception_module(x, 2)
-    x, soft1 = my_inception_module(x, 3, True)
+    x, pred1 = my_inception_module(x, 3, True)
 
     x = my_inception_module(x, 3)
     x = my_inception_module(x, 3)
-    x, soft2 = my_inception_module(x, 4, True)
+    x, pred2 = my_inception_module(x, 4, True)
 
     x = MaxPooling2D((3, 3), strides=(2,2))(x)
     x = my_inception_module(x, 4)
@@ -47,10 +47,10 @@ def inception_net(_input):
     x = AveragePooling2D((5, 5), strides=(1, 1))(x)
     x = Dropout(0.4)(x)
     spatial = get_spatial_dims(x)
-    x = Conv2D(17, kernel_size=spatial)(x)
-    soft3 = Activation('softmax')(x)
-    out = Average()([soft1, soft2, soft3])
-    out = GlobalMaxPooling2D()(out) # Flatten
+    pred3 = Conv2D(17, kernel_size=spatial)(x)
+    out = Average()([pred1, pred2, pred3])
+    out = Flatten()(out)
+    out = Activation('softmax')(out)
     return out
 
 def my_inception_module(x, scale=1, do_predict=False):
@@ -60,7 +60,7 @@ def my_inception_module(x, scale=1, do_predict=False):
     This is a version of the 'inception module', 
     with Batch Norm added
     '''
-    scale *= 4
+    scale *= 5
     x11 = Conv2D(int(16*scale), (1, 1), padding='valid')(x)
     x11 = BatchNormalization()(x11)
     x11 = LeakyReLU()(x11)
@@ -93,10 +93,7 @@ def my_inception_module(x, scale=1, do_predict=False):
         predict = LeakyReLU()(predict)
         predict = Dropout(0.25)(predict)
         spatial = get_spatial_dims(predict)
-        predict = Conv2D(1024, kernel_size=spatial)(predict)
-        predict = BatchNormalization()(predict)
-        predict = LeakyReLU()(predict)
-        predict = Conv2D(17, kernel_size=(1,1), activation='softmax')(predict)
+        predict = Conv2D(17, kernel_size=spatial)(predict)
         return out, predict
 
     return out

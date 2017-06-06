@@ -91,9 +91,24 @@ def load_tiff(idx, tif_dir_path=None):
 
     # Get tiff
     tif_path = os.path.join(tif_dir_path, 'train_'+str(idx)+'.tif')
-    return io.imread(tif_path)
+    tiff = np.float64(io.imread(tif_path))
+    tiff *= 0.00001525878 #(1/2**16)
+    return np.float32(tiff)
 
 
 if __name__ == "__main__":
     print(load_tags()[1])
-    print(load_tiff(1).shape)
+    print(load_tiff[1].shape)
+    # tags = load_tags()
+    # gmin = 1e9
+    # gmax = -1e9
+    # for i in range(tags.shape[0]):
+    #     tiff = load_tiff(i)[:][:][2]
+    #     curmin = np.amin(tiff)
+    #     curmax = np.amax(tiff)
+    #     if curmin < gmin:
+    #         gmin = curmin
+    #         print(gmin)
+    #     if curmax > gmax:
+    #         gmax = curmax
+    #         print(gmax)
