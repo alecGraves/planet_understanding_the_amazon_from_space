@@ -36,16 +36,16 @@ def start_training():
         model = arch.create_model()
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy', FScore2])
 
-        name = (arch.name + "_Date" +
+        save_name = (arch.name + "_Date" +
                 str(datetime.now()).replace(' ', "_Time").replace(":", "-").replace(".", '-'))
-        name = os.path.join(model_save_path, name)
+        save_name = os.path.join(model_save_path, save_name)
         snapshot = SnapshotCallbackBuilder(epochs, snapshots_per_train, init_lr=0.02)
 
         model.fit_generator(batch_gen(tags, val_idx, batch_size, tif_dir_path),
                             steps_per_epoch=val_idx//batch_size,
                             epochs=epochs,
                             validation_data=validation_data,
-                            callbacks=snapshot.get_callbacks(model_prefix=name))
+                            callbacks=snapshot.get_callbacks(model_prefix=save_name))
 
 
 if __name__ == "__main__":
