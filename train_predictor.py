@@ -41,11 +41,11 @@ def batch_gen():
 def start_training():
     while True:
         # Randomly choose an architecture.
-        choice = np.random.choice(len(MODELS)-1)
+        choice = np.random.choice(len(MODELS))
         arch = MODELS[choice]
         print("Loading model {0}.".format(arch.name))
         model = arch.create_model()
-        model.compile(loss='kullback_leibler_divergence', optimizer='adam', metrics=[FScore2])
+        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=[FScore2])
 
         name = (arch.name
         + "_Date"
