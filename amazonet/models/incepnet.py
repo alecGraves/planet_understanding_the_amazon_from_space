@@ -51,7 +51,7 @@ def inception_net(_input):
     pred3 = Conv2D(17, kernel_size=(1, 1))(x)
     pred3 = GlobalAveragePooling2D()(pred3)
     out = Average()([pred1, pred2, pred3])
-    out = Activation('softmax')(out)
+    out = Activation('sigmoid')(out)
     return out
 
 def my_inception_module(x, scale=1, do_predict=False):
