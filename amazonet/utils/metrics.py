@@ -9,7 +9,7 @@ def FScore2(y_true, y_pred):
     The F score, beta=2
     '''
     beta2 = K.variable(4)
-    pred = K.cast(K.greater(y_pred, 0.55), 'float32')
+    pred = K.cast(K.round(y_pred), 'float32')
     tp = K.sum(y_true, 1) # true positive
     fp = K.sum(K.cast(K.not_equal(pred, K.clip(y_true, .5, 1.)), 'float32'), 1)
     fn = K.sum(K.cast(K.not_equal(pred, K.clip(y_true, 0, 0.5)), 'float32'), 1)
