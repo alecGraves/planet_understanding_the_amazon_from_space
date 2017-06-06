@@ -36,10 +36,8 @@ def start_training():
         model = arch.create_model()
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy', FScore2])
 
-        name = (arch.name
-        + "_Date"
-        + str(datetime.now()).replace(' ', "_Time").replace(":", "-").replace(".", '-') 
-        + '.h5')
+        name = (arch.name + "_Date" +
+                str(datetime.now()).replace(' ', "_Time").replace(":", "-").replace(".", '-'))
         name = os.path.join(model_save_path, name)
         snapshot = SnapshotCallbackBuilder(epochs, snapshots_per_train, init_lr=0.02)
 
