@@ -21,4 +21,9 @@ def FScore2(y_true, y_pred):
 
     return K.mean(f2)
 
-
+def competition_loss(y_true, y_pred):
+    '''
+    loss for the kaggle competition data
+    '''
+    # (batch_sze, )
+    pass
