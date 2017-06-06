@@ -95,6 +95,45 @@ def load_tiff(idx, tif_dir_path=None):
     tiff *= 0.00001525878 #(1/2**16)
     return tiff
 
+def batch_gen(tags, val_idx, batch_size, tif_dir_path=None):
+    '''
+    generator object for keras training batches
+    # Inputs
+        tags: np.array of training tags
+        val_idx: index of the beginning of validation data
+        batch_size: size of every batch
+        tif_dir_path: path of tif images (None for default)
+    # Outputs
+        yields batch_x, batch_y for use with keras model.fit_generator()
+    '''
+    while True:
+        for i in range(0, val_idx, batch_size):
+            batch_x = np.ndarray(shape=(batch_size, 256, 256, 4))
+            for j in range(batch_size):
+                batch_x[j] = load_tiff(i+j, tif_dir_path)
+            batch_y = tags[i:i+batch_size]
+
+            yield batch_x, batch_y
+
+def load_val(tags, val_idx, tif_dir_path=None, verbose=False):
+    '''
+    loads validation images and labels given tags and val_idx.
+    # Inputs
+        tags: np.array of all tags
+        val_idx: index of the beginning of validation data
+        tif_dir_path: path of tif images (None for default)
+        verbose: print statement toggle
+    # Outputs
+        returns (val_x, val_y)
+    '''
+    val_y = tags[val_idx:]
+    if verbose:
+        print('Loading {0} val images.'.format(val_y.shape[0]))
+    val_x = np.ndarray(shape=(val_y.shape[0], 256, 256, 4))
+    for j in range(val_y.shape[0]):
+        val_x[j] = load_tiff(val_idx+j, tif_dir_path)
+    return val_x, val_y
+
 
 if __name__ == "__main__":
     print(load_tags()[1])
