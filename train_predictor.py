@@ -1,10 +1,12 @@
 '''
 training function for amazonet module
 '''
+import os
 import numpy as np
 from datetime import datetime
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
+from snapshot import SnapshotCallbackBuilder
 
 from amazonet.models import incepnet, darknet19
 from amazonet.utils.data import load_tags, load_tiff
@@ -14,8 +16,11 @@ MODELS = [incepnet, darknet19]
 
 csv_path = None
 tif_dir_path = None
+model_save_path = "D:\\models"
 
-epochs = 100
+
+epochs = 200
+snapshots_per_train = 10
 batch_size = 32
 
 tags = load_tags(csv_path)
@@ -51,15 +56,14 @@ def start_training():
         + "_Date"
         + str(datetime.now()).replace(' ', "_Time").replace(":", "-").replace(".", '-') 
         + '.h5')
-        model.save_weights(name)
-        savebest = ModelCheckpoint(name, monitor='val_loss', verbose=0, save_best_only=True, mode='min', save_weights_only=False)
-        stopearly = EarlyStopping(monitor='val_loss', patience=10, mode='min')
+        name = os.path.join(model_save_path, name)
+        snapshot = SnapshotCallbackBuilder(epochs, snapshots_per_train, init_lr=0.1)
 
         model.fit_generator(batch_gen(),
                             steps_per_epoch=val_idx//batch_size,
                             epochs=epochs,
                             validation_data=(val_x, val_y),
-                            callbacks=[savebest, stopearly])
+                            callbacks=snapshot.get_callbacks(model_prefix=name))
 
 
 if __name__ == "__main__":
