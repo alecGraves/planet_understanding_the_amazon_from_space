@@ -94,7 +94,7 @@ def competition_loss(y_true, y_pred):
     #
     # y_true.shape = y_test.shape = (batch_sze, 17)
     # sqrt(neg) = 0, this multiplier only affects false_positives.
-    loss_multiplier = (K.sqrt(y_true-y_pred) + K.variable(1))
+    loss_multiplier = (K.variable(1.41421356237) * K.sqrt(y_true-y_pred) + K.variable(1))
     binary_crossentropy = y_true * K.log(y_pred) + (K.variable(1) - y_true) * K.log(K.variable(1) - y_pred)
     recall_preferred_logloss = K.mean(K.variable(-1) * K.mean(binary_crossentropy * loss_multiplier, axis=-1))
     return recall_preferred_logloss
