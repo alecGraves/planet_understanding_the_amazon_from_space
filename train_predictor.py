@@ -8,11 +8,11 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
 from snapshot import SnapshotCallbackBuilder
 
-from amazonet.models import incepnet, darknet19
+from amazonet.models import incepnet, darknet19, alleluna
 from amazonet.utils.data import load_tags, batch_gen, load_val
-from amazonet.utils.metrics import FScore2
+from amazonet.utils.metrics import FScore2, competition_loss
 
-MODELS = [incepnet, darknet19]
+MODELS = [incepnet, darknet19, alleluna]
 
 csv_path = None
 tif_dir_path = None
@@ -34,7 +34,7 @@ def start_training():
         arch = MODELS[choice]
         print("Loading model {0}.".format(arch.name))
         model = arch.create_model()
-        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy', FScore2])
+        model.compile(loss=competition_loss, optimizer='adam', metrics=['binary_accuracy', FScore2])
 
         save_name = (arch.name + "_Date" +
                 str(datetime.now()).replace(' ', "_Time").replace(":", "-").replace(".", '-'))
