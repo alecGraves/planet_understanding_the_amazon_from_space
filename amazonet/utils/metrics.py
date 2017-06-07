@@ -61,8 +61,6 @@ def FScore2_python(y_true, y_pred):
 
     return avg
 
-
-
 def test_FScore2():
     '''test for FScore2'''
     # Test 1:
@@ -81,10 +79,34 @@ def test_FScore2():
 
 def competition_loss(y_true, y_pred):
     '''
-    loss for the kaggle competition data
+    Loss for the kaggle competition data.
+    ### Note:
+    will break if y_pred == 1 or y_pred == 0
+    * Always use sigmoid
     '''
-    # (batch_sze, )
-    pass
+    # evaluation: F2 Score: Recall weighted twice as high as Precision
+    #
+    # Recall = true_positives / (true_positives + false_negatives)
+    #        = maximized when model does not miss categories.
+    #
+    # Precision = true_positives / (true_positives + false_positives)
+    #           = maximized when model does not get false positives.
+    #
+    # y_true.shape = y_test.shape = (batch_sze, 17)
+    # sqrt(neg) = 0, this multiplier only affects false_positives.
+    loss_multiplier = (K.sqrt(y_true-y_pred) + K.variable(1))
+    binary_crossentropy = y_true * K.log(y_pred) + (K.variable(1) - y_true) * K.log(K.variable(1) - y_pred)
+    recall_preferred_logloss = K.mean(K.variable(-1) * K.mean(binary_crossentropy * loss_multiplier, axis=-1))
+    return recall_preferred_logloss
+
+def test_competition_loss():
+    y_true = K.constant([[1, 0, 0, 1]])
+    y_pred = K.constant([[0.1, .9, .9, .9]])
+    loss = competition_loss(y_true, y_pred)
+    print(K.eval(loss))
+
 
 if __name__ == "__main__":
-    test_FScore2()
+    #test_FScore2()
+    test_competition_loss()
+
