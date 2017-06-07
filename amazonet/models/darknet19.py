@@ -1,4 +1,7 @@
-import keras.backend as K
+'''
+Implementation of pjreddie's Darknet19.
+'''
+
 from keras.models import Model
 from keras.layers import (Input, Conv2D, BatchNormalization,
                           Activation, MaxPooling2D, GlobalAveragePooling2D)
@@ -100,3 +103,7 @@ def create_model():
     out = Activation('sigmoid')(x)
 
     return Model(_input, out)
+
+
+if __name__ == "__main__":
+    create_model().summary()

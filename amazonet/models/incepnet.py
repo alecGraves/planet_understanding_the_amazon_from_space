@@ -111,4 +111,4 @@ def test_model():
     print("MODEL COMPILES SUCCESSFULLY")
 
 if __name__ == "__main__":
-    test_model()
+    create_model().summary()
