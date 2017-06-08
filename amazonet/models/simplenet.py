@@ -17,7 +17,7 @@ def create_model():
       - Creator to anyone reading this code
     '''
     _input = Input((256, 256, 4))
-    x = make_conv_bn_elu(_input, 128)
+    x = make_conv_bn_elu(_input, 256, 3, 2)
     x = make_conv_bn_elu(x, 128)
     x = make_conv_bn_elu(x, 128)
 
@@ -34,10 +34,10 @@ def create_model():
 
     out = Concatenate()([outa, outb])
 
-    out = Dense(1024)(out)
+    out = Dense(512)(out)
     out = BatchNormalization()(out)
     out = ELU()(out)
-    out = Dense(1024)(out)
+    out = Dense(512)(out)
     out = BatchNormalization()(out)
     out = ELU()(out)
 
