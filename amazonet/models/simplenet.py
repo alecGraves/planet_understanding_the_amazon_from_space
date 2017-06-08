@@ -18,8 +18,8 @@ def create_model():
     '''
     _input = Input((256, 256, 4))
     x = make_conv_bn_elu(_input, 128)
-    x = make_conv_bn_elu(x, 96)
-    x = make_conv_bn_elu(x, 64)
+    x = make_conv_bn_elu(x, 128)
+    x = make_conv_bn_elu(x, 128)
 
     x = make_block(x, 96)
 
@@ -36,10 +36,10 @@ def create_model():
 
     out = Concatenate()([outa, outb, outc])
 
-    out = Dense(2048)(out)
+    out = Dense(1280)(out)
     out = BatchNormalization()(out)
     out = ELU()(out)
-    out = Dense(2048)(out)
+    out = Dense(1280)(out)
     out = BatchNormalization()(out)
     out = ELU()(out)
 
