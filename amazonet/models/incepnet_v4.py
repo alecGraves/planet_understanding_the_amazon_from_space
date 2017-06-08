@@ -1,6 +1,8 @@
 from keras.layers import Input, merge, Dropout, Dense, Flatten, Activation
 from keras.layers.convolutional import MaxPooling2D, Convolution2D, AveragePooling2D
 from keras.layers.normalization import BatchNormalization
+from keras.layers import GlobalAveragePooling2D
+from keras.layers.advanced_activations import PReLU
 from keras.models import Model
 
 from keras import backend as K
@@ -26,7 +28,7 @@ def conv_block(x, nb_filter, nb_row, nb_col, border_mode='same', subsample=(1, 1
 
     x = Convolution2D(nb_filter, nb_row, nb_col, subsample=subsample, border_mode=border_mode, bias=bias)(x)
     x = BatchNormalization(axis=channel_axis)(x)
-    x = Activation('relu')(x)
+    x = PReLU()(x)
     return x
 
 
@@ -175,7 +177,7 @@ def reduction_B(input):
     return m
 
 
-def create_model(nb_classes=1001, load_weights=True):
+def create_model(nb_classes=17):
     '''
     Creates a inception v4 network
 
@@ -210,35 +212,15 @@ def create_model(nb_classes=1001, load_weights=True):
         x = inception_C(x)
 
     # Average Pooling
-    x = AveragePooling2D((8, 8))(x)
+    x = GlobalAveragePooling2D()(x)
 
     # Dropout
     x = Dropout(0.8)(x)
-    x = Flatten()(x)
 
     # Output
-    out = Dense(output_dim=nb_classes, activation='softmax')(x)
+    out = Dense(output_dim=nb_classes, activation='sigmoid')(x)
 
     model = Model(init, out, name='Inception-v4')
-
-    if load_weights:
-        if K.backend() == "theano":
-            if K.image_dim_ordering() == "th":
-                weights = get_file('inception_v4_weights_th_dim_ordering_th_kernels.h5', TH_BACKEND_TH_DIM_ORDERING,
-                                   cache_subdir='models')
-            else:
-                weights = get_file('inception_v4_weights_tf_dim_ordering_th_kernels.h5', TH_BACKEND_TF_DIM_ORDERING,
-                                   cache_subdir='models')
-        else:
-            if K.image_dim_ordering() == "th":
-                weights = get_file('inception_v4_weights_th_dim_ordering_tf_kernels.h5', TF_BACKEND_TH_DIM_ORDERING,
-                                   cache_subdir='models')
-            else:
-                weights = get_file('inception_v4_weights_tf_dim_ordering_tf_kernels.h5', TH_BACKEND_TF_DIM_ORDERING,
-                                   cache_subdir='models')
-
-        model.load_weights(weights)
-        print("Model weights loaded.")
 
     return model
 
