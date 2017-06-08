@@ -19,17 +19,16 @@ def create_model():
     x = make_conv_bn_elu(_input, 64, 7, 2)
     x = MaxPool2D(pool_size=(3, 3), strides=2)(x)
     x = make_conv_bn_elu(x, 192, 3)
-    x = make_conv_bn_elu(x, 8)
-    x = make_conv_bn_elu(x, 8)
-    x = make_conv_bn_elu(x, 8)
+    x = MaxPool2D(pool_size=(3, 3), strides=2)(x)
+    x = make_conv_bn_elu(x, 128)
+    x = make_conv_bn_elu(x, 128)
+    x = make_conv_bn_elu(x, 128)
 
-    x = make_block(x, 32)
+    x = make_block(x, 128)
 
-    x = make_block(x, 32)
+    outa = make_block(x, 256)
 
-    outa = make_block(x, 64)
-
-    outb = make_block(outa, 128)
+    outb = make_block(outa, 512)
 
 
     # add dropout to a and b here if overfitting
