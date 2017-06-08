@@ -27,6 +27,7 @@ def create_model():
 
     outb = make_block(outa, 512)
 
+    # add dropout to a and b here if overfitting
     outa = GlobalAveragePooling2D()(outa)
     outb = GlobalAveragePooling2D()(outb)
     out = Concatenate()([outa, outb])
