@@ -23,7 +23,7 @@ snapshots_per_train = 10
 batch_size = 32
 
 tags = load_tags(csv_path)
-val_idx = tags.shape[0]//100*95
+val_idx = tags.shape[0]//10*9
 
 validation_data = load_val(tags, val_idx, tif_dir_path, True)
 
