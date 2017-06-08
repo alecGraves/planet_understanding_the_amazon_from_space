@@ -13,11 +13,14 @@ name = 'simplenet'
 
 def create_model():
     '''
-    "I am sorry"
-      - Creator to anyone reading this code
+    NULL
     '''
     _input = Input((256, 256, 4))
-    x = make_conv_bn_elu(_input, 256, 3, 2)
+    x = make_conv_bn_elu(_input, 64, 7, 2)
+    x = MaxPool2D(pool_size=(3, 3), strides=2)(x)
+    x = make_conv_bn_elu(x, 192, 3)
+    x = MaxPool2D(pool_size=(3, 3), strides=2)(x)
+    x = make_conv_bn_elu(x, 128)
     x = make_conv_bn_elu(x, 128)
     x = make_conv_bn_elu(x, 128)
 
