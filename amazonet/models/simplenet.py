@@ -23,19 +23,23 @@ def create_model():
 
     x = make_block(x, 96)
 
-    outa = make_block(x, 256)
+    outa = make_block(x, 128)
 
-    outb = make_block(outa, 512)
+    outb = make_block(outa, 384)
+
+    outc = make_block(outb, 768)
 
     # add dropout to a and b here if overfitting
     outa = GlobalAveragePooling2D()(outa)
     outb = GlobalAveragePooling2D()(outb)
-    out = Concatenate()([outa, outb])
+    outc = GlobalAveragePooling2D()(outc)
 
-    out = Dense(1024)(out)
+    out = Concatenate()([outa, outb, outc])
+
+    out = Dense(2048)(out)
     out = BatchNormalization()(out)
     out = ELU()(out)
-    out = Dense(1024)(out)
+    out = Dense(2048)(out)
     out = BatchNormalization()(out)
     out = ELU()(out)
 
