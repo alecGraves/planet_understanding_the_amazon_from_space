@@ -54,7 +54,7 @@ def create_model():
     alleluna = Conv2D(filters=512, kernel_size=(3, 3), strides=(1, 1))(alleluna)
     alleluna = ELU()(alleluna)
     alleluna = BatchNormalization()(alleluna)
-    alleluna = Dropout(0.5)(alleluna)
+    alleluna = Dropout(2/3)(alleluna)
 
     alleluna = Conv2D(filters=1280, kernel_size=(3, 3), strides=(1, 1))(alleluna)
     alleluna = ELU()(alleluna)
