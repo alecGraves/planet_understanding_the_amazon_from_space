@@ -9,26 +9,33 @@ from keras.layers import (Input, Conv2D, Activation, Dense,
 
 from keras.layers.advanced_activations import ELU
 
-name = 'simplenet'
+name = 'simplenet_v2'
 
 def create_model():
     '''
     NULL
     '''
     _input = Input((256, 256, 4))
-    x = make_conv_bn_elu(_input, 64, 7, 2)
-    x = MaxPool2D(pool_size=(3, 3), strides=2)(x)
-    x = make_conv_bn_elu(x, 192, 3)
-    x = MaxPool2D(pool_size=(3, 3), strides=2)(x)
-    x = make_conv_bn_elu(x, 128)
-    x = make_conv_bn_elu(x, 128)
-    x = make_conv_bn_elu(x, 128)
 
-    x = make_block(x, 128)
+    x = make_conv_bn_elu(_input, 32, 3, 2)
+    x = make_conv_bn_elu(x, 32, 3, 1, 1)
+    x = make_conv_bn_elu(x, 64, 3, 1, 1)
 
-    outa = make_block(x, 256)
+    x1 = MaxPool2D(pool_size=(3, 3), strides=2)(x)
+    x2 = make_conv_bn_elu(x, 96, 3, 2)
+    x = Concatenate()([x1, x2])
 
-    outb = make_block(outa, 512)
+    x = make_conv_bn_elu(x, 16)
+    x = make_conv_bn_elu(x, 16)
+    x = make_conv_bn_elu(x, 16)
+
+    x = make_block(x, 32)
+
+    x = make_block(x, 32)
+
+    outa = make_block(x, 64)
+
+    outb = make_block(outa, 128)
 
 
     # add dropout to a and b here if overfitting
@@ -56,8 +63,9 @@ def make_block(x, filters):
     x = make_conv_bn_elu(x, filters)
     x = make_conv_bn_elu(x, filters)
     x = make_conv_bn_elu(x, filters, 3, 1, 1)
-    x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
-    return x
+    x1 = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
+    x2 = make_conv_bn_elu(x, filters*2, 3, 2)
+    return Concatenate()([x1, x2])
 
 def make_conv_bn_elu(x, filters, kernel_size=1, stride=1, padding=0):
     if padding == 0:
