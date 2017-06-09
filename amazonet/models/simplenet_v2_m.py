@@ -39,12 +39,14 @@ def create_model():
 
 
     # add dropout to a and b here if overfitting
+    outa = Dropout(1/3)(outa)
+    outb = Dropout(1/3)(outb)
+    outc = Dropout(1/3)(outc)
     outa = GlobalAveragePooling2D()(outa)
     outb = GlobalAveragePooling2D()(outb)
     outc = GlobalAveragePooling2D()(outc)
 
     out = Concatenate()([outa, outb, outc])
-    out = Dropout(1/3)(out)
 
     out = Dense(1280)(out)
     out = BatchNormalization()(out)
