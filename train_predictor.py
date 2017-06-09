@@ -27,12 +27,6 @@ val_idx = None
 validation_data = None
 
 def load():
-    args = get_args()
-
-    csv_path = os.path.expanduser(args.csv_path)
-    jpeg_dir_path = os.path.expanduser(args.image_path)
-    model_save_path = os.path.expanduser(args.model_path)
-
     tags = load_tags(csv_path)
     val_idx = tags.shape[0]//10*9
 
@@ -83,8 +77,12 @@ def get_args():
         help='path to csv file, defaults to "C:\\data\\kaggle_satellite\\train-csv"',
         default='C:\\data\\kaggle_satellite\\train.csv')
 
-    return argparser.parse_args()
+    args = argparser.parse_args()
+    csv_path = os.path.expanduser(args.csv_path)
+    jpeg_dir_path = os.path.expanduser(args.image_path)
+    model_save_path = os.path.expanduser(args.model_path)
 
 if __name__ == "__main__":
+    get_args()
     load()
     start_training()
