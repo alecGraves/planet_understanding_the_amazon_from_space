@@ -10,7 +10,7 @@ Created by shadySource.
 
 import os
 import numpy as np
-from skimage import io
+import PIL.Image as Image
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -76,24 +76,43 @@ def load_tags(csv_path=None):
 
     return tag_array
 
-def load_tiff(idx, tif_dir_path=None):
-    '''
-    Loads and returns a numpified tiff file.
-    ### Inputs:
-    * idx: the number of the image to load: image_$(idx)
-    * tif_dir_path: path to the tif folder (optional, if DATA_PATH set)
-    ### Returns:
-    * numpy array of tif data
-    '''
-    # Get path from var if not passed in.
-    if tif_dir_path is None:
-        tif_dir_path = DATA_PATH[1]
+# def load_tiff(idx, tif_dir_path=None):
+#     '''
+#     Loads and returns a numpified tiff file.
+#     ### Inputs:
+#     * idx: the number of the image to load: image_$(idx)
+#     * tif_dir_path: path to the tif folder (optional, if DATA_PATH set)
+#     ### Returns:
+#     * numpy array of tif data
+#     '''
+#     # Get path from var if not passed in.
+#     if tif_dir_path is None:
+#         tif_dir_path = DATA_PATH[1]
 
-    # Get tiff
-    tif_path = os.path.join(tif_dir_path, 'train_'+str(idx)+'.tif')
-    tiff = np.float32(io.imread(tif_path))
-    tiff *= 0.00001525878 #(1/2**16)
-    return tiff
+#     # Get tiff
+#     tif_path = os.path.join(tif_dir_path, 'train_'+str(idx)+'.tif')
+#     tiff = np.float32(io.imread(tif_path))
+#     tiff *= 0.00001525878 #(1/2**16)
+#     return tiff
+
+def load_jpeg(idx, jpeg_dir_path=None):
+    if jpeg_dir_path is None:
+        jpeg_dir_path = tif_dir_path = DATA_PATH[1]
+
+    if type(idx).__name__ == 'str':
+        jpeg_dir = idx
+    else:
+        jpeg_dir = os.path.join(jpeg_dir_path, 'train_'+str(idx)+'.tif')
+    image = np.array(Image.open(jpeg_dir), dtype=np.float32)
+    image -= np.array([1., 2., 3.], dtype=np.float32) # subtract means
+    image *= np.float32(0.00392156862) #1/255
+    return image
+
+def calc_means():
+    '''
+    Calculates and prints the means for color channels in the images
+    '''
+    pass
 
 def batch_gen(tags, val_idx, batch_size, tif_dir_path=None):
     '''
@@ -108,9 +127,9 @@ def batch_gen(tags, val_idx, batch_size, tif_dir_path=None):
     '''
     while True:
         for i in range(0, val_idx, batch_size):
-            batch_x = np.ndarray(shape=(batch_size, 256, 256, 4))
+            batch_x = np.ndarray(shape=(batch_size, 256, 256, 3))
             for j in range(batch_size):
-                batch_x[j] = load_tiff(i+j, tif_dir_path)
+                batch_x[j] = load_jpeg(i+j, tif_dir_path)
             batch_y = tags[i:i+batch_size]
 
             yield batch_x, batch_y
@@ -129,15 +148,16 @@ def load_val(tags, val_idx, tif_dir_path=None, verbose=False):
     val_y = tags[val_idx:]
     if verbose:
         print('Loading {0} val images.'.format(val_y.shape[0]))
-    val_x = np.ndarray(shape=(val_y.shape[0], 256, 256, 4))
+    val_x = np.ndarray(shape=(val_y.shape[0], 256, 256, 3))
     for j in range(val_y.shape[0]):
-        val_x[j] = load_tiff(val_idx+j, tif_dir_path)
+        val_x[j] = load_jpeg(val_idx+j, tif_dir_path)
     return val_x, val_y
 
 
 if __name__ == "__main__":
+    calc_means()
     print(load_tags()[1])
-    print(load_tiff[1].shape)
+    print(load_jpeg(1).shape)
     # tags = load_tags()
     # gmin = 1e9
     # gmax = -1e9
