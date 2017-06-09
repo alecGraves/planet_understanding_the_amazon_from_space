@@ -5,7 +5,7 @@ Thank you Felix Yu.
 import numpy as np
 import copy
 
-from keras.layers import Input, Dense, Convolution2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, merge, Reshape, Activation, Lambda, GlobalAveragePooling2D, Merge
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Dropout, Flatten, Add, Reshape, Activation, Lambda, GlobalAveragePooling2D
 from keras.optimizers import SGD
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
@@ -21,13 +21,13 @@ name = 'resnet152'
 class Scale(Layer):
     '''Custom Layer for ResNet used for BatchNormalization.
     
-    Learns a set of weights and biases used for scaling the input data.
+    Learns a set of weights and use_biases used for scaling the input data.
     the output consists simply in an element-wise multiplication of the input
     and a sum of a set of constants:
 
         out = in * gamma + beta,
 
-    where 'gamma' and 'beta' are the weights and biases larned.
+    where 'gamma' and 'beta' are the weights and use_biases larned.
 
     # Arguments
         axis: integer, axis along which to normalize in mode 0. For instance,
@@ -96,23 +96,23 @@ def identity_block(input_tensor, kernel_size, filters, stage, block):
     bn_name_base = 'bn' + str(stage) + block + '_branch'
     scale_name_base = 'scale' + str(stage) + block + '_branch'
 
-    x = Convolution2D(nb_filter1, 1, 1, name=conv_name_base + '2a', bias=False)(input_tensor)
+    x = Conv2D(nb_filter1, (1, 1), name=conv_name_base + '2a', use_bias=False)(input_tensor)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2a')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2a')(x)
     x = Activation('relu', name=conv_name_base + '2a_relu')(x)
 
     x = ZeroPadding2D((1, 1), name=conv_name_base + '2b_zeropadding')(x)
-    x = Convolution2D(nb_filter2, kernel_size, kernel_size,
-                      name=conv_name_base + '2b', bias=False)(x)
+    x = Conv2D(nb_filter2, (kernel_size, kernel_size),
+                      name=conv_name_base + '2b', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2b')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2b')(x)
     x = Activation('relu', name=conv_name_base + '2b_relu')(x)
 
-    x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c', bias=False)(x)
+    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + '2c', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2c')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2c')(x)
 
-    x = merge([x, input_tensor], mode='sum', name='res' + str(stage) + block)
+    x = Add()([x, input_tensor])
     x = Activation('relu', name='res' + str(stage) + block + '_relu')(x)
     return x
 
@@ -124,8 +124,8 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
         filters: list of integers, the nb_filters of 3 conv layer at main path
         stage: integer, current stage label, used for generating layer names
         block: 'a','b'..., current block label, used for generating layer names
-    Note that from stage 3, the first conv layer at main path is with subsample=(2,2)
-    And the shortcut should have subsample=(2,2) as well
+    Note that from stage 3, the first conv layer at main path is with strides=(2,2)
+    And the shortcut should have strides=(2,2) as well
     '''
     eps = 1.1e-5
     nb_filter1, nb_filter2, nb_filter3 = filters
@@ -133,29 +133,29 @@ def conv_block(input_tensor, kernel_size, filters, stage, block, strides=(2, 2))
     bn_name_base = 'bn' + str(stage) + block + '_branch'
     scale_name_base = 'scale' + str(stage) + block + '_branch'
 
-    x = Convolution2D(nb_filter1, 1, 1, subsample=strides,
-                      name=conv_name_base + '2a', bias=False)(input_tensor)
+    x = Conv2D(nb_filter1, (1, 1), strides=strides,
+                      name=conv_name_base + '2a', use_bias=False)(input_tensor)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2a')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2a')(x)
     x = Activation('relu', name=conv_name_base + '2a_relu')(x)
 
     x = ZeroPadding2D((1, 1), name=conv_name_base + '2b_zeropadding')(x)
-    x = Convolution2D(nb_filter2, kernel_size, kernel_size,
-                      name=conv_name_base + '2b', bias=False)(x)
+    x = Conv2D(nb_filter2, (kernel_size, kernel_size),
+                      name=conv_name_base + '2b', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2b')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2b')(x)
     x = Activation('relu', name=conv_name_base + '2b_relu')(x)
 
-    x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c', bias=False)(x)
+    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + '2c', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2c')(x)
     x = Scale(axis=bn_axis, name=scale_name_base + '2c')(x)
 
-    shortcut = Convolution2D(nb_filter3, 1, 1, subsample=strides,
-                             name=conv_name_base + '1', bias=False)(input_tensor)
+    shortcut = Conv2D(nb_filter3, (1, 1), strides=strides,
+                             name=conv_name_base + '1', use_bias=False)(input_tensor)
     shortcut = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '1')(shortcut)
     shortcut = Scale(axis=bn_axis, name=scale_name_base + '1')(shortcut)
 
-    x = merge([x, shortcut], mode='sum', name='res' + str(stage) + block)
+    x = Add()([x, shortcut])
     x = Activation('relu', name='res' + str(stage) + block + '_relu')(x)
     return x
 
@@ -172,13 +172,13 @@ def create_model(weights_path=None):
     global bn_axis
     if K.image_dim_ordering() == 'tf':
       bn_axis = 3
-      img_input = Input(shape=(256, 256, 3), name='data')
+      img_input = Input(shape=(256, 256, 4), name='data')
     else:
       bn_axis = 1
-      img_input = Input(shape=(3, 256, 256), name='data')
+      img_input = Input(shape=(4, 256, 256), name='data')
 
     x = ZeroPadding2D((3, 3), name='conv1_zeropadding')(img_input)
-    x = Convolution2D(64, 7, 7, subsample=(2, 2), name='conv1', bias=False)(x)
+    x = Conv2D(64, (7, 7), strides=(2, 2), name='conv1', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name='bn_conv1')(x)
     x = Scale(axis=bn_axis, name='scale_conv1')(x)
     x = Activation('relu', name='conv1_relu')(x)
@@ -202,7 +202,7 @@ def create_model(weights_path=None):
 
     x_fc = AveragePooling2D((7, 7), name='avg_pool')(x)
     x_fc = Flatten()(x_fc)
-    x_fc = Dense(1000, activation='softmax', name='fc1000')(x_fc)
+    x_fc = Dense(17, activation='softmax', name='fc17')(x_fc)
 
     model = Model(img_input, x_fc)
 
