@@ -11,10 +11,10 @@ Solution to understanding the amazon from space.
 * simplenet_v2 and simplenet_v2_m are being tested
 
 ## TODO (que)
-* pass in image and csv dir and model save dir as args
+* Calculate jpeg means and perform subtraction in data loading function, optional pass in means
+* use JPEGS instead of tifs
 * make submission to test fscore2
     * create model output function
-* use JPEGS instead of tifs
 * build and test other FScore2=92 architecture
 * build and test resnet
 * make a performance evaluation function, see most missed class, etc
