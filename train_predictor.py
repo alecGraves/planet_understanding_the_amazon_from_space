@@ -19,20 +19,17 @@ epochs = 150
 snapshots_per_train = 10
 batch_size = 32
 
-csv_path = None
-jpeg_dir_path = None
-model_save_path = None
 tags = None
 val_idx = None
 validation_data = None
 
-def load():
+def load(csv_path, jpeg_dir_path):
     tags = load_tags(csv_path)
     val_idx = tags.shape[0]//10*9
 
     validation_data = load_val(tags, val_idx, jpeg_dir_path, True)
 
-def start_training():
+def start_training(model_save_path):
     while True:
         # Randomly choose an architecture.
         choice = np.random.choice(len(MODELS))
@@ -81,8 +78,9 @@ def get_args():
     csv_path = os.path.expanduser(args.csv_path)
     jpeg_dir_path = os.path.expanduser(args.image_path)
     model_save_path = os.path.expanduser(args.model_path)
+    return csv_path, jpeg_dir_path, model_save_path
 
 if __name__ == "__main__":
-    get_args()
-    load()
-    start_training()
+    csv_path, jpeg_dir_path, model_save_path = get_args()
+    load(csv_path, jpeg_dir_path)
+    start_training(model_save_path)
