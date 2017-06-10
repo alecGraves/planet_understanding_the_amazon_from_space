@@ -102,9 +102,9 @@ def load_jpeg(idx, jpeg_dir_path=None):
     if type(idx).__name__ == 'str':
         jpeg_dir = idx
     else:
-        jpeg_dir = os.path.join(jpeg_dir_path, 'train_'+str(idx)+'.tif')
+        jpeg_dir = os.path.join(jpeg_dir_path, 'train_'+str(idx)+'.jpg')
     image = np.array(Image.open(jpeg_dir), dtype=np.float32)
-    image -= np.array([1., 2., 3.], dtype=np.float32) # subtract means
+    image -= np.array([1., 1., 1., 1.], dtype=np.float32) # subtract means
     image *= np.float32(0.00392156862) #1/255
     return image
 
@@ -127,7 +127,7 @@ def batch_gen(tags, val_idx, batch_size, tif_dir_path=None):
     '''
     while True:
         for i in range(0, val_idx, batch_size):
-            batch_x = np.ndarray(shape=(batch_size, 256, 256, 3))
+            batch_x = np.ndarray(shape=(batch_size, 256, 256, 4))
             for j in range(batch_size):
                 batch_x[j] = load_jpeg(i+j, tif_dir_path)
             batch_y = tags[i:i+batch_size]
@@ -148,7 +148,7 @@ def load_val(tags, val_idx, tif_dir_path=None, verbose=False):
     val_y = tags[val_idx:]
     if verbose:
         print('Loading {0} val images.'.format(val_y.shape[0]))
-    val_x = np.ndarray(shape=(val_y.shape[0], 256, 256, 3))
+    val_x = np.ndarray(shape=(val_y.shape[0], 256, 256, 4))
     for j in range(val_y.shape[0]):
         val_x[j] = load_jpeg(val_idx+j, tif_dir_path)
     return val_x, val_y

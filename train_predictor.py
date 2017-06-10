@@ -9,21 +9,22 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
 
 from snapshot import SnapshotCallbackBuilder
-from amazonet.models import incepnet, darknet19, alleluna
+from amazonet.models import resnet18
 from amazonet.utils.data import load_tags, batch_gen, load_val
 from amazonet.utils.metrics import FScore2, competition_loss
 
-MODELS = [incepnet, darknet19, alleluna]
+MODELS = [resnet18]
 
 epochs = 150
 snapshots_per_train = 10
-batch_size = 32
+batch_size = 84
 
 tags = None
 val_idx = None
 validation_data = None
 
 def load(csv_path, jpeg_dir_path):
+    global tags, val_idx, validation_data
     tags = load_tags(csv_path)
     val_idx = tags.shape[0]//10*9
 
@@ -36,12 +37,12 @@ def start_training(model_save_path):
         arch = MODELS[choice]
         print("Loading model {0}.".format(arch.name))
         model = arch.create_model()
-        model.compile(loss=competition_loss, optimizer='adam', metrics=['binary_accuracy', FScore2])
+        model.compile(loss=competition_loss, optimizer='sgd', metrics=['binary_accuracy', FScore2])
 
         save_name = (arch.name + "_Date" +
                 str(datetime.now()).replace(' ', "_Time").replace(":", "-").replace(".", '-'))
         save_name = os.path.join(model_save_path, save_name)
-        snapshot = SnapshotCallbackBuilder(epochs, snapshots_per_train, init_lr=0.02)
+        snapshot = SnapshotCallbackBuilder(epochs, snapshots_per_train, init_lr=0.1)
 
         model.fit_generator(batch_gen(tags, val_idx, batch_size, jpeg_dir_path),
                             steps_per_epoch=val_idx//batch_size,
