@@ -49,7 +49,7 @@ jpeg_dir_path = os.path.expanduser(args.image_path)
 model_save_path = os.path.expanduser(args.model_path)
 
 tags = load_tags(csv_path)
-val_idx = tags.shape[0]//10*9
+val_idx = tags.shape[0]//8*7 # supposedly ideal
 
 validation_data = load_val(tags, val_idx, jpeg_dir_path, True)
 
