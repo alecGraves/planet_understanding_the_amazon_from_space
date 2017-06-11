@@ -9,26 +9,49 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
 
 from snapshot import SnapshotCallbackBuilder
-from amazonet.models import resnet18
+from amazonet.models import resnet
 from amazonet.utils.data import load_tags, batch_gen, load_val
 from amazonet.utils.metrics import FScore2, competition_loss
 
-MODELS = [resnet18]
+MODELS = [resnet]
 
 epochs = 150
 snapshots_per_train = 10
-batch_size = 84
+batch_size = 32
 
-tags = None
-val_idx = None
-validation_data = None
 
-def load(csv_path, jpeg_dir_path):
-    global tags, val_idx, validation_data
-    tags = load_tags(csv_path)
-    val_idx = tags.shape[0]//10*9
+# Arguments...
+argparser = argparse.ArgumentParser(
+    description="Train prediction models for kaggle satellite competition")
 
-    validation_data = load_val(tags, val_idx, jpeg_dir_path, True)
+argparser.add_argument(
+    '-ip',
+    '--image_path',
+    help="path to folder of image data, defaults to 'C:\\data\\kaggle_satellite\\train.csv'",
+    default="C:\\data\\kaggle_satellite\\train-jpg")
+
+argparser.add_argument(
+    '-m',
+    '--model_path',
+    help='path to save models',
+    default="D:\\models")
+
+argparser.add_argument(
+    '-c',
+    '--csv_path',
+    help='path to csv file, defaults to "C:\\data\\kaggle_satellite\\train-csv"',
+    default='C:\\data\\kaggle_satellite\\train_v2.csv')
+
+args = argparser.parse_args()
+
+csv_path = os.path.expanduser(args.csv_path)
+jpeg_dir_path = os.path.expanduser(args.image_path)
+model_save_path = os.path.expanduser(args.model_path)
+
+tags = load_tags(csv_path)
+val_idx = tags.shape[0]//10*9
+
+validation_data = load_val(tags, val_idx, jpeg_dir_path, True)
 
 def start_training(model_save_path):
     while True:
@@ -50,38 +73,7 @@ def start_training(model_save_path):
                             validation_data=validation_data,
                             callbacks=snapshot.get_callbacks(model_prefix=save_name))
 
-def get_args():
-    '''
-    Gets args
-    '''
-    argparser = argparse.ArgumentParser(
-        description="Train prediction models for kaggle satellite competition")
 
-    argparser.add_argument(
-        '-ip',
-        '--image_path',
-        help="path to folder of image data, defaults to 'C:\\data\\kaggle_satellite\\train.csv'",
-        default="C:\\data\\kaggle_satellite\\train-tif")
-
-    argparser.add_argument(
-        '-m',
-        '--model_path',
-        help='path to save models',
-        default="D:\\models")
-
-    argparser.add_argument(
-        '-c',
-        '--csv_path',
-        help='path to csv file, defaults to "C:\\data\\kaggle_satellite\\train-csv"',
-        default='C:\\data\\kaggle_satellite\\train.csv')
-
-    args = argparser.parse_args()
-    csv_path = os.path.expanduser(args.csv_path)
-    jpeg_dir_path = os.path.expanduser(args.image_path)
-    model_save_path = os.path.expanduser(args.model_path)
-    return csv_path, jpeg_dir_path, model_save_path
 
 if __name__ == "__main__":
-    csv_path, jpeg_dir_path, model_save_path = get_args()
-    load(csv_path, jpeg_dir_path)
     start_training(model_save_path)

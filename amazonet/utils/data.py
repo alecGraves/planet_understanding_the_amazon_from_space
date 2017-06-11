@@ -14,8 +14,8 @@ import PIL.Image as Image
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
-DATA_PATH = ['C:\\data\\kaggle_satellite\\train.csv',
-             'C:\\data\\kaggle_satellite\\train-tif']
+DATA_PATH = ['C:\\data\\kaggle_satellite\\train_v2.csv',
+             'C:\\data\\kaggle_satellite\\train-jpg']
 
 TAG_DICT = {
     'clear' : 0,
@@ -103,16 +103,22 @@ def load_jpeg(idx, jpeg_dir_path=None):
         jpeg_dir = idx
     else:
         jpeg_dir = os.path.join(jpeg_dir_path, 'train_'+str(idx)+'.jpg')
-    image = np.array(Image.open(jpeg_dir), dtype=np.float32)
-    image -= np.array([1., 1., 1., 1.], dtype=np.float32) # subtract means
+    image = np.array(Image.open(jpeg_dir), dtype=np.float32)[:, :, :3]
+    image -= np.array([ 175.75383321, 168.20073958, 178.75635654], dtype=np.float32) # subtract means
     image *= np.float32(0.00392156862) #1/255
     return image
 
-def calc_means():
-    '''
-    Calculates and prints the means for color channels in the images
-    '''
-    pass
+# def calc_means():
+#     '''
+#     Calculates and prints the means for color channels in the images
+#     '''
+#     tags = load_tags()
+#     images = load_val(tags, tags.shape[0]//10*9, verbose=True)[0]
+#     average = np.mean(images, axis=0)
+#     average = np.mean(average, axis=0)
+#     average = np.mean(average, axis=0)
+#     print(average)
+
 
 def batch_gen(tags, val_idx, batch_size, tif_dir_path=None):
     '''
@@ -127,7 +133,7 @@ def batch_gen(tags, val_idx, batch_size, tif_dir_path=None):
     '''
     while True:
         for i in range(0, val_idx, batch_size):
-            batch_x = np.ndarray(shape=(batch_size, 256, 256, 4))
+            batch_x = np.ndarray(shape=(batch_size, 256, 256, 3))
             for j in range(batch_size):
                 batch_x[j] = load_jpeg(i+j, tif_dir_path)
             batch_y = tags[i:i+batch_size]
@@ -148,16 +154,16 @@ def load_val(tags, val_idx, tif_dir_path=None, verbose=False):
     val_y = tags[val_idx:]
     if verbose:
         print('Loading {0} val images.'.format(val_y.shape[0]))
-    val_x = np.ndarray(shape=(val_y.shape[0], 256, 256, 4))
+    val_x = np.ndarray(shape=(val_y.shape[0], 256, 256, 3))
     for j in range(val_y.shape[0]):
         val_x[j] = load_jpeg(val_idx+j, tif_dir_path)
     return val_x, val_y
 
 
 if __name__ == "__main__":
-    calc_means()
     print(load_tags()[1])
     print(load_jpeg(1).shape)
+    # print(load_jpeg(1)[0][0])
     # tags = load_tags()
     # gmin = 1e9
     # gmax = -1e9
