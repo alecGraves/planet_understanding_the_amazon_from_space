@@ -5,9 +5,15 @@ import os
 import argparse
 import json
 import numpy as np
+from keras.models import load_model
 
-from amazonet.models import darknet19, alleluna
-from amazonet.utils.data import load_tiff
+from amazonet.utils.data import TAG_DICT, load_jpeg
+from amazonet.utils.metrics import competition_loss, FScore2
+
+INV_TAG_DICT = {j : i for i, j in TAG_DICT.items()}
+CUSTOM_DICT = {'competition_loss' : competition_loss,
+               'FScore2' : FScore2}
+
 
 argparser = argparse.ArgumentParser(
     description="""Pass in model directory and image directory.
@@ -29,39 +35,45 @@ argparser.add_argument(
     '-o',
     '--out_file',
     help="File name to save .json file.",
-    default="predictions.json")
+    default=os.path.join('.', 'predictions.csv'))
 
 
-def get_predictions(model_path, image_path):
+def get_predictions(model_path, image_path, out_file, threshold=0.4):
     '''
-    "returns prediction stuff."
-        -shadySource
+    Saves predictions as numpy file.
     '''
-    imagenum = range(len(os.listdir(image_path)))
-    modelnames = os.listdir(model_path)
+    images = [os.path.join(image_path, imagename) for imagename in os.listdir(image_path)]
+    models = [os.path.join(model_path, modelname) for modelname in os.listdir(model_path)]
+
     predictions = []
-    for name in modelnames:
-        if darknet19.name in name:
-            model = darknet19.create_model()
-        elif alleluna.name in name:
-            model = darknet19.create_model()
+    for modelpath in models:
+        model = load_model(modelpath, custom_objects=CUSTOM_DICT)
 
-        model.load_weights(os.path.join(model_path, name))
-        modelpreds = []
-        for i in range(imagenum):
-            modelpreds.append(model.predict(load_tiff(i, image_path)))
-        predictions.append(modelpreds)
-    predictions = np.array(predictions)
-    predictions = np.average(predictions, axis=0)
-    predictions = np.round(predictions)
-    np.save('predictions', predictions)
-    for vec in predictions:
-        for i, pred in enumerate(vec):
-            if 
-    return 0
+        predictions.append([model.predict(np.expand_dims(load_jpeg(imagepath), 0))
+                            for imagepath in images])
+    print(predictions)
+    if out_file[-5:] == '.json': 
+        predictions_dict = {models[i] : {images[j] : modelpred for j, modelpred in enumerate(modelpreds)}
+                            for i, modelpreds in enumerate(predictions)}
+
+        with open(out_file, 'w') as outfile:
+            json.dump(outfile, predictions_dict)
+    elif out_file[-4:] == '.csv':
+        predictions_csv = [i[i.find('image_', -15):-5] + ',' + 
+            ' '.join([INV_TAG_DICT[j] if prednum > threshold else None for j, prednum in enumerate(p)])
+            for i, p in zip(images, predictions[0])]
+        print('image_name,tags\n' + '\n'.join(predictions_csv))
+        # with open(out_file, 'w') as outfile:
+        #     outfile.write('image_name,tags\n' + '\n'.join(predictions_csv))
+    else:
+        ValueError(out_file + ' must end with .csv or .json')
+
 
 if __name__ == "__main__":
     args = argparser.parse_args()
-    predictions = get_predictions(args.model_path, args.image_path)
-    # with open(args.out_file, 'w') as out_file:
-    #     json.dump(predictions, out_file)
+
+    model_path = os.path.expanduser(args.model_path)
+    image_path = os.path.expanduser(args.image_path)
+    out_file = os.path.expanduser(args.out_file)
+
+    get_predictions(model_path, image_path, out_file)
