@@ -38,35 +38,60 @@ argparser.add_argument(
     default=os.path.join('.', 'predictions.csv'))
 
 
+
 def get_predictions(model_path, image_path, out_file, threshold=0.4):
     '''
     Saves predictions as numpy file.
     '''
-    images = [os.path.join(image_path, imagename) for imagename in os.listdir(image_path)]
-    models = [os.path.join(model_path, modelname) for modelname in os.listdir(model_path)]
+    imagenames = sorted(os.listdir(image_path), key=getint)
+    modelnames = os.listdir(model_path)
+    imagepaths = [os.path.join(image_path, imagename) for imagename in imagenames]
+    modelpaths = [os.path.join(model_path, modelname) for modelname in modelnames]
 
     predictions = []
-    for modelpath in models:
+    for i, modelpath in enumerate(modelpaths):
         model = load_model(modelpath, custom_objects=CUSTOM_DICT)
 
-        predictions.append([model.predict(np.expand_dims(load_jpeg(imagepath), 0))
-                            for imagepath in images])
-    print(predictions)
+        predictions.append([])
+        for j, imagepath in enumerate(imagepaths):
+            predictions[i].append(model.predict(np.expand_dims(load_jpeg(imagepath), 0))[0])
+            print(imagenames[j] + ', ' + preds_to_str(predictions[i][-1]))
+
     if out_file[-5:] == '.json': 
-        predictions_dict = {models[i] : {images[j] : modelpred for j, modelpred in enumerate(modelpreds)}
+        predictions_dict = {modelnames[i] : {imagenames[j] : modelpred for j, modelpred in enumerate(modelpreds)}
                             for i, modelpreds in enumerate(predictions)}
 
         with open(out_file, 'w') as outfile:
             json.dump(outfile, predictions_dict)
+
     elif out_file[-4:] == '.csv':
-        predictions_csv = [i[i.find('image_', -15):-5] + ',' + 
-            ' '.join([INV_TAG_DICT[j] if prednum > threshold else None for j, prednum in enumerate(p)])
-            for i, p in zip(images, predictions[0])]
-        print('image_name,tags\n' + '\n'.join(predictions_csv))
-        # with open(out_file, 'w') as outfile:
-        #     outfile.write('image_name,tags\n' + '\n'.join(predictions_csv))
+        predictions_csv = [i + ',' + preds_to_str(p, threshold) for i, p in zip(imagenames, predictions[0])]
+        csv = 'image_name,tags\n' + '\n'.join(predictions_csv)
+        with open(out_file, 'w') as outfile:
+            outfile.write(csv)
+
     else:
         ValueError(out_file + ' must end with .csv or .json')
+
+def getint(name):
+    basename = name[:-4]
+    num = basename.split('_')[-1]
+    return int(num)
+
+def preds_to_str(pred, threshold=0.4):
+    pred_tags = []
+    maxweather = 0
+    for i, category in enumerate(pred):
+        # Exclusivity for weather labels
+        # if i < 4:
+        #     if category > maxweather
+        #         if len(pred_tags) > 0:
+        #             pred_tags.pop()
+        #         pred_tags.append(str(INV_TAG_DICT[i]))
+        #         maxweather = category
+        if category > threshold:
+            pred_tags.append(str(INV_TAG_DICT[i]))
+    return ' '.join(pred_tags)
 
 
 if __name__ == "__main__":
