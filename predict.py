@@ -50,22 +50,25 @@ def get_predictions(model_path, image_path, out_file, threshold=0.4):
 
     predictions = []
     for i, modelpath in enumerate(modelpaths):
-        model = load_model(modelpath, custom_objects=CUSTOM_DICT)
+        if modelpath[-3:] == '.h5':
+            model = load_model(modelpath, custom_objects=CUSTOM_DICT)
+        else:
+            continue
 
         predictions.append([])
         for j, imagepath in enumerate(imagepaths):
             predictions[i].append(model.predict(np.expand_dims(load_jpeg(imagepath), 0))[0])
-            print(imagenames[j] + ', ' + preds_to_str(predictions[i][-1]))
+            print(imagenames[j] + ', ' + preds_to_tags(predictions[i][-1]))
 
     if out_file[-5:] == '.json': 
-        predictions_dict = {modelnames[i] : {imagenames[j] : modelpred for j, modelpred in enumerate(modelpreds)}
+        predictions_dict = {modelnames[i] : {imagenames[j][:-4] : [str(m) for m in modelpred] for j, modelpred in enumerate(modelpreds)}
                             for i, modelpreds in enumerate(predictions)}
 
         with open(out_file, 'w') as outfile:
-            json.dump(outfile, predictions_dict)
+            json.dump(predictions_dict, outfile, indent=4)
 
     elif out_file[-4:] == '.csv':
-        predictions_csv = [i[:-4] + ',' + preds_to_str(p, threshold) for i, p in zip(imagenames, predictions[0])]
+        predictions_csv = [i[:-4] + ',' + preds_to_tags(p, threshold) for i, p in zip(imagenames, predictions[0])]
         csv = 'image_name,tags\n' + '\n'.join(predictions_csv)
         with open(out_file, 'w') as outfile:
             outfile.write(csv)
@@ -78,7 +81,7 @@ def getint(name):
     num = basename.split('_')[-1]
     return int(num)
 
-def preds_to_str(pred, threshold=0.4):
+def preds_to_tags(pred, threshold=0.4):
     pred_tags = []
     maxweather = 0
     for i, category in enumerate(pred):
