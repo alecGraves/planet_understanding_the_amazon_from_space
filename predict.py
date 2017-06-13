@@ -65,7 +65,7 @@ def get_predictions(model_path, image_path, out_file, threshold=0.4):
             json.dump(outfile, predictions_dict)
 
     elif out_file[-4:] == '.csv':
-        predictions_csv = [i + ',' + preds_to_str(p, threshold) for i, p in zip(imagenames, predictions[0])]
+        predictions_csv = [i[:-4] + ',' + preds_to_str(p, threshold) for i, p in zip(imagenames, predictions[0])]
         csv = 'image_name,tags\n' + '\n'.join(predictions_csv)
         with open(out_file, 'w') as outfile:
             outfile.write(csv)
