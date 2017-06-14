@@ -46,11 +46,16 @@ else:
 with open(json_path, 'r') as json_file:
     pred_dict = json.load(json_file)
 
+def sort_by_key_int(item):
+    a, b = item
+    return int(''.join(filter(str.isdigit, a)))
+
+
 imagenames = []
 predictions = []
-for modelpath, preds in  pred_dict.items():
+for i, (modelpath, preds) in  enumerate(pred_dict.items()):
     predictions.append([])
-    for i, (imagename, pred_vec) in enumerate(preds.items()):
+    for imagename, pred_vec in sorted(preds.items(), key=sort_by_key_int):
         if i == 0:
             imagenames.append(imagename)
         predictions[-1].append([float(category)
@@ -62,13 +67,12 @@ predictions = np.swapaxes(predictions, 0, 1) # swap axes (images, models, 17)
 # Load true values (if csv_path given).
 if csv_path is not None:
     tags = load_tags(csv_path)
-    val_idx = tags.shape[0]//10*9-1
+    val_idx = int(''.join(filter(str.isdigit, imagenames[0])))
     validation_tags = tags[val_idx:]
-
     conductor = simple_conductor.create_model(predictions.shape[1])
     conductor.summary()
     conductor.compile(optimizer='Adam', loss=competition_loss, metrics=[FScore2])
-    conductor.fit(predictions, validation_tags, batch_size=validation_tags.shape[0], epochs=100000)
+    conductor.fit(predictions[1:], validation_tags, batch_size=validation_tags.shape[0], epochs=100000)
     conductor.save('trained_conductor.h5')
 
 else:
