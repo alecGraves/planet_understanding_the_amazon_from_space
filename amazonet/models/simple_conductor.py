@@ -2,7 +2,7 @@
 simple conductor net that finds the optimal weight for each category of each prediction network
 '''
 import keras.backend as K
-from keras.layers import Input, Dense, Reshape, Lambda, Multiply, Add, Average
+from keras.layers import Input, Dense, Reshape, Lambda, Multiply, Add, Average, Activation
 from keras.models import Model
 
 def create_model(n=1):
@@ -13,7 +13,7 @@ def create_model(n=1):
     one = Lambda(lambda x : K.ones((1, 1)))(x)
     m = Dense(17*n, use_bias=False, kernel_initializer='ones')(one)
     m = Reshape((n, 17))(m)
-    b = Dense(17*n, use_bias=False, kernel_initializer='zeros')(one)
+    b = Dense(17*n, use_bias=False, kernel_initializer='glorot_uniform')(one)
     b = Reshape((n, 17))(b)
     y = Multiply()([m, x])
     y = Add()([y, b])

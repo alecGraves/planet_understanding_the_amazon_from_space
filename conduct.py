@@ -70,32 +70,9 @@ if csv_path is not None:
     val_idx = int(''.join(filter(str.isdigit, imagenames[0])))
     validation_tags = tags[val_idx:]
     conductor = simple_conductor.create_model(predictions.shape[1])
-    # for i, val in enumerate(validation_tags):
-    #     tag = tags[sort_by_key_int((imagenames[i], 'bob'))]
-    #     for i, t in enumerate(tag):
-    #         if t != val[i]:
-    #             print('error at ', i)
-    #             break
-    # print(validation_tags[0])
-    # print(tags[val_idx])
-    # print(validation_tags[-1])
-    # print(tags[-1])
-    # print(imagenames[0])
-    # print(val_idx)
-    # print(imagenames[-1])
-    # print(tags.shape[0])
-    # print(validation_tags.shape)
-    # print(predictions.shape)
-    # print(len(imagenames))
-    # print(tags[sort_by_key_int((imagenames[-3], ' '))])
-    # print(validation_tags[-2])
-    # print(validation_tags.shape[0])
-    # for i, name in enumerate(imagenames):
-    #     print(sort_by_key_int((name, ' ')), val_idx + i)
-    # exit()
     conductor.summary()
     conductor.compile(optimizer='Adam', loss=competition_loss, metrics=[FScore2])
-    conductor.fit(predictions[:-1], validation_tags, batch_size=validation_tags.shape[0], epochs=100000)
+    conductor.fit(predictions[:-1], validation_tags, batch_size=validation_tags.shape[0], epochs=10000)
     conductor.save('trained_conductor.h5')
 
 else:
