@@ -62,12 +62,13 @@ predictions = np.swapaxes(predictions, 0, 1) # swap axes (images, models, 17)
 # Load true values (if csv_path given).
 if csv_path is not None:
     tags = load_tags(csv_path)
-    val_idx = tags.shape[0]//10*9
+    val_idx = tags.shape[0]//10*9-1
     validation_tags = tags[val_idx:]
 
     conductor = simple_conductor.create_model(predictions.shape[1])
+    conductor.summary()
     conductor.compile(optimizer='Adam', loss=competition_loss, metrics=[FScore2])
-    conductor.fit(predictions, validation_tags, batch_size=2, epochs=100000)
+    conductor.fit(predictions, validation_tags, batch_size=validation_tags.shape[0], epochs=100000)
     conductor.save('trained_conductor.h5')
 
 else:
