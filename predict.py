@@ -10,6 +10,10 @@ from keras.models import load_model
 from amazonet.utils.data import TAG_DICT, load_jpeg
 from amazonet.utils.metrics import competition_loss, FScore2
 
+from amazonet.models import resnet
+
+MODELS = [resnet]
+
 INV_TAG_DICT = {j : i for i, j in TAG_DICT.items()}
 CUSTOM_DICT = {'competition_loss' : competition_loss,
                'FScore2' : FScore2}
@@ -34,31 +38,43 @@ argparser.add_argument(
 argparser.add_argument(
     '-o',
     '--out_file',
-    help="File name to save .json file.",
+    help="File name to save .json or .csv file.",
     default=os.path.join('.', 'predictions.csv'))
 
+argparser.add_argument(
+    '-v',
+    '--val_only',
+    help="Whether or not to load only val images.",
+    default="False")
 
 
-def get_predictions(model_path, image_path, out_file, threshold=0.4):
+def get_predictions(model_path, image_path, out_file, threshold=0.4, val_only=False):
     '''
     Saves predictions as numpy file.
     '''
     imagenames = sorted(os.listdir(image_path), key=getint)
+    if val_only:
+        imagenames = imagenames[len(imagenames)//10*9:]
     modelnames = os.listdir(model_path)
     imagepaths = [os.path.join(image_path, imagename) for imagename in imagenames]
     modelpaths = [os.path.join(model_path, modelname) for modelname in modelnames]
-
     predictions = []
     for i, modelpath in enumerate(modelpaths):
+        model = None
         if modelpath[-3:] == '.h5':
-            model = load_model(modelpath, custom_objects=CUSTOM_DICT)
+            for _model in MODELS:
+                if _model.name in modelnames[i]:
+                    model = _model.create_model()
+            print('loading', modelpath)
+            model.load_weights(modelpath)
         else:
             continue
 
         predictions.append([])
         for j, imagepath in enumerate(imagepaths):
             predictions[i].append(model.predict(np.expand_dims(load_jpeg(imagepath), 0))[0])
-            print(imagenames[j] + ', ' + preds_to_tags(predictions[i][-1]))
+            print(imagenames[j][:-4] + ', ' + preds_to_tags(predictions[i][-1]))
+
 
     if out_file[-5:] == '.json': 
         predictions_dict = {modelnames[i] : {imagenames[j][:-4] : [str(m) for m in modelpred] for j, modelpred in enumerate(modelpreds)}
@@ -104,4 +120,10 @@ if __name__ == "__main__":
     image_path = os.path.expanduser(args.image_path)
     out_file = os.path.expanduser(args.out_file)
 
-    get_predictions(model_path, image_path, out_file)
+    if args.val_only.lower() == 'true':
+        val_only = True
+    else:
+        val_only = False
+
+
+    get_predictions(model_path, image_path, out_file, val_only=val_only)

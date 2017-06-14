@@ -12,7 +12,7 @@ from keras.models import load_model
 from amazonet.models import simple_conductor
 from amazonet.utils.data import load_tags, load_val
 from amazonet.utils.metrics import FScore2, competition_loss
-import amazonet.utils.predict as P
+import predict as P
 
 argparser = argparse.ArgumentParser(
     description="Train ensemble conductor network model for kaggle satellite competition")
@@ -62,9 +62,8 @@ predictions = np.swapaxes(predictions, 0, 1) # swap axes (images, models, 17)
 # Load true values (if csv_path given).
 if csv_path is not None:
     tags = load_tags(csv_path)
-    # val_idx = tags.shape[0]//10*9
-    # validation_tags = tags[val_idx:]
-    validation_tags = tags[-2:]
+    val_idx = tags.shape[0]//10*9
+    validation_tags = tags[val_idx:]
 
     conductor = simple_conductor.create_model(predictions.shape[1])
     conductor.compile(optimizer='Adam', loss=competition_loss, metrics=[FScore2])
