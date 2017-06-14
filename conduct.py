@@ -1,0 +1,81 @@
+'''
+Conductor network
+'''
+import os
+import json
+import argparse
+import numpy as np
+
+from keras.optimizers import SGD
+from keras.models import load_model
+
+from amazonet.models import simple_conductor
+from amazonet.utils.data import load_tags, load_val
+from amazonet.utils.metrics import FScore2, competition_loss
+import amazonet.utils.predict as P
+
+argparser = argparse.ArgumentParser(
+    description="Train ensemble conductor network model for kaggle satellite competition")
+
+argparser.add_argument(
+    '-t',
+    '--trained_conductor',
+    help='Path to a trained conductor network for evaluation.',
+    default=None)
+
+argparser.add_argument(
+    '-p',
+    '--predictions_path',
+    help='Path to prediction json.',
+    default="D:\\predictions.json")
+
+argparser.add_argument(
+    '-c',
+    '--csv_path',
+    help="Path to CSV file if training a conductor.",
+    default=None)
+
+args = argparser.parse_args()
+json_path = os.path.expanduser(args.predictions_path)
+if args.csv_path is not None:
+    csv_path = os.path.expanduser(args.csv_path)
+else:
+    csv_path = None
+
+# Get predictions.
+with open(json_path, 'r') as json_file:
+    pred_dict = json.load(json_file)
+
+imagenames = []
+predictions = []
+for modelpath, preds in  pred_dict.items():
+    predictions.append([])
+    for i, (imagename, pred_vec) in enumerate(preds.items()):
+        if i == 0:
+            imagenames.append(imagename)
+        predictions[-1].append([float(category)
+                                for category in pred_vec])
+
+predictions = np.swapaxes(predictions, 0, 1) # swap axes (images, models, 17)
+
+
+# Load true values (if csv_path given).
+if csv_path is not None:
+    tags = load_tags(csv_path)
+    # val_idx = tags.shape[0]//10*9
+    # validation_tags = tags[val_idx:]
+    validation_tags = tags[-2:]
+
+    conductor = simple_conductor.create_model(predictions.shape[1])
+    conductor.compile(optimizer='Adam', loss=competition_loss, metrics=[FScore2])
+    conductor.fit(predictions, validation_tags, batch_size=2, epochs=100000)
+    conductor.save('trained_conductor.h5')
+
+else:
+    conductor = load_model('trained_conductor.h5', custom_objects=P.CUSTOM_DICT)
+    preds = conductor.predict(predictions)
+    predictions_csv = [i + ',' + P.preds_to_tags(p, threshold=0.4) for i, p in zip(imagenames, preds)]
+    csv = 'image_name,tags\n' + '\n'.join(predictions_csv)
+    with open('final_preds.csv', 'w') as outfile:
+        outfile.write(csv)
+
