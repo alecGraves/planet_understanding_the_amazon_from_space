@@ -6,7 +6,8 @@ from keras.layers import (
     Input,
     Activation,
     Dense,
-    Flatten
+    Flatten,
+    Dropout
 )
 from keras.layers.convolutional import (
     Conv2D,
@@ -227,6 +228,8 @@ class ResnetBuilder(object):
 
         # Last activation
         block = _bn_elu(block)
+
+        block = Dropout(0.28867)(block)
 
         # Classifier block
         block_shape = K.int_shape(block)
