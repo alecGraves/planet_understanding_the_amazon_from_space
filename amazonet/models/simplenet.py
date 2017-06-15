@@ -15,11 +15,12 @@ def create_model():
     '''
     NULL
     '''
-    _input = Input((256, 256, 4))
-    x = make_conv_bn_elu(_input, 64, 7, 2)
-    x = MaxPool2D(pool_size=(3, 3), strides=2)(x)
-    x = make_conv_bn_elu(x, 192, 3)
-    x = make_conv_bn_elu(x, 8)
+    # _input = Input((256, 256, 4))
+    # x = make_conv_bn_elu(_input, 64, 7, 2)
+    # x = MaxPool2D(pool_size=(3, 3), strides=2)(x)
+    # x = make_conv_bn_elu(x, 192, 3)
+    _input = Input((64, 64, 3))
+    x = make_conv_bn_elu(_input, 8)
     x = make_conv_bn_elu(x, 8)
     x = make_conv_bn_elu(x, 8)
 

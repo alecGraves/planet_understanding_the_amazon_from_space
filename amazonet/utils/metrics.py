@@ -10,7 +10,8 @@ def FScore2(y_true, y_pred):
     '''
     B2 = K.variable(4)
     OnePlusB2 = K.variable(5)
-    pred = K.round(y_pred)
+    thresh =  K.variable(0.2)
+    pred = K.cast(K.greater(y_pred, thresh), 'float32')
     tp = K.sum(K.cast(K.less(K.abs(pred - K.clip(y_true, .5, 1.)), 0.01), 'float32'), -1)
     fp = K.sum(K.cast(K.greater(pred - y_true, 0.1), 'float32'), -1)
     fn = K.sum(K.cast(K.less(pred - y_true, -0.1), 'float32'), -1)
