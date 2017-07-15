@@ -1,6 +1,6 @@
 # planet_understanding_the_amazon_from_space
 My solution to the caggle competitionPlanet: understanding the amazon from space.
-final rank ~= 300/800, .92 Fscore2
+* Final rank ~= 300/800, .92 Fscore2
 
 
 ## Notes
