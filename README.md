@@ -1,5 +1,7 @@
 # planet_understanding_the_amazon_from_space
-Solution to understanding the amazon from space.
+My solution to the caggle competitionPlanet: understanding the amazon from space.
+final rank ~= 300/800, .92 Fscore2
+
 
 ## Notes
 * Simplenet seems to offer great performance for the size
@@ -11,12 +13,6 @@ Solution to understanding the amazon from space.
 * simplenet_v2 and simplenet_v2_m are being tested
 
 ## TODO (que)
-* Calculate jpeg means and perform subtraction in data loading function, optional pass in means
-* use JPEGS instead of tifs
-* make submission to test fscore2
-    * create model output function
-* build and test other FScore2=92 architecture
-* build and test resnet
 * make a performance evaluation function, see most missed class, etc
 * create special networks trained on hard classes
     * try cirriculum learning?
